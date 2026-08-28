@@ -1,0 +1,5 @@
+{
+  "name": "adflow-edge-proxy",
+  "main": "_worker.js",
+  "compatibility_date": "2026-08-28"
+}
