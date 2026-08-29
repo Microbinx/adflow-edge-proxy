@@ -1,5 +1,5 @@
 // ======================================================================
-// ADFLOW ISOLATED EDGE PROXY - STREAM-SAFE MUTATION BUILD
+// ADFLOW ISOLATED EDGE PROXY - PRODUCTION STREAM-SAFE BYPASS BUILD
 // Save Location: Your GitHub Repository -> _worker.js
 // ======================================================================
 
@@ -16,20 +16,25 @@ export default {
     const pathParts = url.pathname.split('/'); 
     const folder = pathParts[1] ? pathParts[1].toLowerCase() : ''; 
 
-    // 🛑 AD-FOLDER BYPASS REINFORCED
-    // If the traffic is heading to your admin console files, bypass the proxy blocks 
-    // entirely and pass the request raw so mutation data frames never drop.
-    if (url.pathname.includes('/adflow') || url.pathname.includes('mutation.php') || url.pathname.includes('config-delivery.php')) {
+    // 🛑 HARDENED SECURITY BYPASS (THE DIRECT FIX FOR LOGIN LOOPS)
+    // If the link carries an administrative path OR an active API parameter,
+    // completely bypass the proxy blocks and pass the request raw to the server.
+    if (
+      url.pathname.includes('/adflow') || 
+      url.pathname.includes('mutation.php') || 
+      url.pathname.includes('config-delivery.php') ||
+      url.searchParams.has('api_auth')
+    ) {
       return fetch(request);
     }
 
-    // 🎯 IF THE PATH MATCHES AN AD PROXY FOLDER, RUN THE DE-CLOAK MATRIX
+    // 🎯 IF THE PATH MATCHES AN AD PROXY FOLDER, RUN THE DE-CLOAK CORE
     if (folder && NETWORKS[folder]) {
       const realDomain = NETWORKS[folder];
       const newPath = url.pathname.replace(`/${folder}/`, '');
       const realTargetUrl = `https://${realDomain}/${newPath}${url.search}`;
 
-      // Clone the request stream to prevent form data loss over the cloud proxy
+      // Clone the stream to prevent body consumption data vaporization
       const clonedRequest = request.clone();
 
       const response = await fetch(realTargetUrl, {
