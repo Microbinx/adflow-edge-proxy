@@ -1,5 +1,5 @@
 // ======================================================================
-// ADFLOW ISOLATED EDGE PROXY - PRODUCTION COMPATIBILITY BUILD
+// ADFLOW ISOLATED EDGE PROXY - LOOP-FREE COMPATIBILITY BUILD
 // Save Location: Your GitHub Repository -> _worker.js
 // ======================================================================
 
@@ -8,10 +8,14 @@ const NETWORKS = {
   'adcash': 'acscdn.com',                 
   'cybertron': 'cybertronads.com',
   
-  // HilltopAds Multi-Domain Proxy Matrix
+  // HilltopAds Multi-Domain Proxy Matrix Exception Mapping
   'hilltopads': 'untimely-hello.com',
   'hilltopads-pop': 'physicaldad.com'
 };
+
+// 🛰️ PHYSICAL BACKEND HOSTING SERVER ORIGIN ENDPOINT
+// This breaks the infinite loop by forcing whitelisted traffic directly to your host
+const ORIGIN_SERVER = '://infinityfree.com'; 
 
 export default {
   async fetch(request, env, ctx) {
@@ -19,14 +23,15 @@ export default {
     const pathParts = url.pathname.split('/'); 
     const folder = pathParts[1] ? pathParts[1].toLowerCase() : ''; 
 
-    // 🛑 HARDENED SECURITY BYPASS: Protect panels from data drops
+    // 🛑 HARDENED SECURITY BYPASS: Routes paths straight to the origin server safely
     if (
       url.pathname.includes('/adflow') || 
       url.pathname.includes('mutation.php') || 
       url.pathname.includes('config-delivery.php') ||
       url.searchParams.has('api_auth')
     ) {
-      return fetch(request);
+      const targetOriginUrl = `https://${ORIGIN_SERVER}${url.pathname}${url.search}`;
+      return fetch(targetOriginUrl, { method: request.method, headers: request.headers, body: request.method === 'POST' ? await request.text() : null });
     }
 
     // 🎯 IF THE PATH MATCHES AN AD PROXY FOLDER, RUN THE DE-CLOAK MATRIX
@@ -35,7 +40,6 @@ export default {
       const newPath = url.pathname.replace(`/${folder}/`, '');
       const realTargetUrl = `https://${realDomain}/${newPath}${url.search}`;
 
-      // Clone the request stream to prevent data injection packet loss
       const clonedRequest = request.clone();
 
       const response = await fetch(realTargetUrl, {
@@ -65,7 +69,8 @@ export default {
       return response;
     }
 
-    // Standard website passthrough
-    return fetch(request);
+    // Pass standard public website pages safely to the physical host
+    const defaultSiteUrl = `https://${ORIGIN_SERVER}${url.pathname}${url.search}`;
+    return fetch(defaultSiteUrl, { method: request.method, headers: request.headers });
   }
 };
