@@ -1,46 +1,45 @@
 // ======================================================================
-// ADFLOW ISOLATED EDGE PROXY - MULTI-DOMAIN COMPATIBILITY BUILD
+// ADFLOW ISOLATED EDGE PROXY - LOOP-FREE COMPATIBILITY BUILD
 // Save Location: Your GitHub Repository -> _worker.js
 // ======================================================================
 
 const NETWORKS = {
-  'adsterra': ['celerycribbanish.com'],     
-  'adcash': ['acscdn.com'],                 
-  'cybertron': ['cybertronads.com'],         
+  'adsterra': 'celerycribbanish.com',     
+  'adcash': 'acscdn.com',                 
+  'cybertron': 'cybertronads.com',
   
-  // HilltopAds Multi-Domain Proxy Matrix Array Setup
-  'hilltopads': ['untimely-hello.com'],
-  'hilltopads-pop': ['physicaldad.com']
+  // HilltopAds Multi-Domain Proxy Matrix Exception Mapping
+  'hilltopads': 'untimely-hello.com',
+  'hilltopads-pop': 'physicaldad.com'
 };
+
+// 🎯 FIXED: Points to your actual personal hosting domain configuration
+const ORIGIN_SERVER = 'microbim.name.ng'; 
 
 export default {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
-    
-    // 🛑 HARDENED SECURITY BYPASS: Fast-track administrative interface streams
+    const pathParts = url.pathname.split('/'); 
+    const folder = pathParts[1] ? pathParts[1].toLowerCase() : ''; 
+
+    // 🔒 HARDENED SECURITY BYPASS: Forces whitelisted system files to route to your backend origin safely
     if (
       url.pathname.includes('/adflow') || 
       url.pathname.includes('mutation.php') || 
       url.pathname.includes('config-delivery.php') ||
       url.searchParams.has('api_auth')
     ) {
-      return fetch(request);
+      const targetOriginUrl = `https://${ORIGIN_SERVER}${url.pathname}${url.search}`;
+      return fetch(targetOriginUrl, { 
+        method: request.method, 
+        headers: request.headers, 
+        body: request.method === 'POST' ? await request.text() : null 
+      });
     }
 
-    const pathParts = url.pathname.split('/'); 
-    // Safely extract the first folder path subdirectory index parameter
-    const folder = (pathParts && pathParts[1]) ? pathParts[1].toLowerCase() : ''; 
-
-    // 🎯 MATCH TRACE: Check if the folder maps to any domain in our network matrix array
+    // 🛡️ IF THE PATH MATCHES AN AD PROXY FOLDER, RUN THE DE-CLOAK MATRIX
     if (folder && NETWORKS[folder]) {
-      const domainsArray = NETWORKS[folder];
-      
-      // Select the active target domain safely out of the array mapping layout
-      let realDomain = domainsArray[0];
-      if (domainsArray.length > 1) {
-        realDomain = url.searchParams.get('domain_fallback') || domainsArray[1] || domainsArray[0];
-      }
-
+      const realDomain = NETWORKS[folder];
       const newPath = url.pathname.replace(`/${folder}/`, '');
       const realTargetUrl = `https://${realDomain}/${newPath}${url.search}`;
 
@@ -59,12 +58,8 @@ export default {
       const contentType = response.headers.get('Content-Type') || '';
       if (contentType.includes('javascript') || contentType.includes('html')) {
         let text = await response.text();
-        
-        // Loop through and mask ALL matching domains for this specific provider key
-        for (const dom of domainsArray) {
-          const cleanRegex = new RegExp(dom, 'g');
-          text = text.replace(cleanRegex, `${url.hostname}/${folder}`);
-        }
+        const cleanRegex = new RegExp(realDomain, 'g');
+        text = text.replace(cleanRegex, `${url.hostname}/${folder}`);
         
         return new Response(text, { 
           status: response.status,
@@ -77,7 +72,11 @@ export default {
       return response;
     }
 
-    // Standard public webpage passthrough routing to origin host
-    return fetch(request);
+    // 🌐 Pass standard public website pages safely to your custom origin server
+    const defaultSiteUrl = `https://${ORIGIN_SERVER}${url.pathname}${url.search}`;
+    return fetch(defaultSiteUrl, { 
+      method: request.method, 
+      headers: request.headers 
+    });
   }
 };
