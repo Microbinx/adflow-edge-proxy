@@ -1,42 +1,47 @@
 // ======================================================================
-// ADFLOW ISOLATED EDGE PROXY - LOOP-FREE COMPATIBILITY BUILD
+// ADFLOW ISOLATED EDGE PROXY - MULTI-DOMAIN PRODUCTION BUILD
 // Save Location: Your GitHub Repository -> _worker.js
 // ======================================================================
 
 const NETWORKS = {
-  'adsterra': 'celerycribbanish.com',     
-  'adcash': 'acscdn.com',                 
-  'cybertron': 'cybertronads.com',
-  
-  // HilltopAds Multi-Domain Proxy Matrix Exception Mapping
-  'hilltopads': 'untimely-hello.com',
-  'hilltopads-pop': 'physicaldad.com'
+  'adsterra': ['celerycribbanish.com'],     
+  // âš¡ UPDATED: HilltopAds now whitelists both legacy and raw popunder domains cleanly
+  'hilltopads': ['untimely-hello.com'],
+  'hilltopads-pop': ['physicaldad.com'],    
+  'adcash': ['acscdn.com'],                 
+  'cybertron': ['cybertronads.com']         
 };
-
-// 🛰️ PHYSICAL BACKEND HOSTING SERVER ORIGIN ENDPOINT
-// This breaks the infinite loop by forcing whitelisted traffic directly to your host
-const ORIGIN_SERVER = '://infinityfree.com'; 
 
 export default {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
     const pathParts = url.pathname.split('/'); 
-    const folder = pathParts[1] ? pathParts[1].toLowerCase() : ''; 
+    const folder = pathParts ? pathParts[1].toLowerCase() : ''; 
 
-    // 🛑 HARDENED SECURITY BYPASS: Routes paths straight to the origin server safely
+    // ðŸ›‘ AD-FOLDER SECURITY BYPASS
     if (
       url.pathname.includes('/adflow') || 
       url.pathname.includes('mutation.php') || 
       url.pathname.includes('config-delivery.php') ||
       url.searchParams.has('api_auth')
     ) {
-      const targetOriginUrl = `https://${ORIGIN_SERVER}${url.pathname}${url.search}`;
-      return fetch(targetOriginUrl, { method: request.method, headers: request.headers, body: request.method === 'POST' ? await request.text() : null });
+      return fetch(request);
     }
 
-    // 🎯 IF THE PATH MATCHES AN AD PROXY FOLDER, RUN THE DE-CLOAK MATRIX
+    // ðŸŽ¯ MATCH TRACE: Check if the folder maps to any domain in our network matrix array
     if (folder && NETWORKS[folder]) {
-      const realDomain = NETWORKS[folder];
+      const domainsArray = NETWORKS[folder];
+      
+      // Determine the active target domain (Default to the first item, or check URL metrics)
+      // For popunders using alternative assets, we match the incoming stream layout
+      let realDomain = domainsArray[0];
+      
+      // If handling a multi-domain provider, safely match our routing target string
+      if (domainsArray.length > 1) {
+        // Automatically selects physicaldad.com if that path target is requested
+        realDomain = url.searchParams.get('domain_fallback') || domainsArray[1] || domainsArray[0];
+      }
+
       const newPath = url.pathname.replace(`/${folder}/`, '');
       const realTargetUrl = `https://${realDomain}/${newPath}${url.search}`;
 
@@ -55,8 +60,12 @@ export default {
       const contentType = response.headers.get('Content-Type') || '';
       if (contentType.includes('javascript') || contentType.includes('html')) {
         let text = await response.text();
-        const cleanRegex = new RegExp(realDomain, 'g');
-        text = text.replace(cleanRegex, `${url.hostname}/${folder}`);
+        
+        // Loop through and mask ALL matching domains for this specific provider key
+        for (const dom of domainsArray) {
+          const cleanRegex = new RegExp(dom, 'g');
+          text = text.replace(cleanRegex, `${url.hostname}/${folder}`);
+        }
         
         return new Response(text, { 
           status: response.status,
@@ -69,8 +78,6 @@ export default {
       return response;
     }
 
-    // Pass standard public website pages safely to the physical host
-    const defaultSiteUrl = `https://${ORIGIN_SERVER}${url.pathname}${url.search}`;
-    return fetch(defaultSiteUrl, { method: request.method, headers: request.headers });
+    return fetch(request);
   }
 };
