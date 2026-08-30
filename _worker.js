@@ -1,24 +1,23 @@
 // ======================================================================
-// ADFLOW ISOLATED EDGE PROXY - MULTI-DOMAIN PRODUCTION BUILD
+// ADFLOW ISOLATED EDGE PROXY - MULTI-DOMAIN COMPATIBILITY BUILD
 // Save Location: Your GitHub Repository -> _worker.js
 // ======================================================================
 
 const NETWORKS = {
   'adsterra': ['celerycribbanish.com'],     
-  // âš¡ UPDATED: HilltopAds now whitelists both legacy and raw popunder domains cleanly
-  'hilltopads': ['untimely-hello.com'],
-  'hilltopads-pop': ['physicaldad.com'],    
   'adcash': ['acscdn.com'],                 
-  'cybertron': ['cybertronads.com']         
+  'cybertron': ['cybertronads.com'],         
+  
+  // HilltopAds Multi-Domain Proxy Matrix Array Setup
+  'hilltopads': ['untimely-hello.com'],
+  'hilltopads-pop': ['physicaldad.com']
 };
 
 export default {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
-    const pathParts = url.pathname.split('/'); 
-    const folder = pathParts ? pathParts[1].toLowerCase() : ''; 
-
-    // ðŸ›‘ AD-FOLDER SECURITY BYPASS
+    
+    // 🛑 HARDENED SECURITY BYPASS: Fast-track administrative interface streams
     if (
       url.pathname.includes('/adflow') || 
       url.pathname.includes('mutation.php') || 
@@ -28,17 +27,17 @@ export default {
       return fetch(request);
     }
 
-    // ðŸŽ¯ MATCH TRACE: Check if the folder maps to any domain in our network matrix array
+    const pathParts = url.pathname.split('/'); 
+    // Safely extract the first folder path subdirectory index parameter
+    const folder = (pathParts && pathParts[1]) ? pathParts[1].toLowerCase() : ''; 
+
+    // 🎯 MATCH TRACE: Check if the folder maps to any domain in our network matrix array
     if (folder && NETWORKS[folder]) {
       const domainsArray = NETWORKS[folder];
       
-      // Determine the active target domain (Default to the first item, or check URL metrics)
-      // For popunders using alternative assets, we match the incoming stream layout
+      // Select the active target domain safely out of the array mapping layout
       let realDomain = domainsArray[0];
-      
-      // If handling a multi-domain provider, safely match our routing target string
       if (domainsArray.length > 1) {
-        // Automatically selects physicaldad.com if that path target is requested
         realDomain = url.searchParams.get('domain_fallback') || domainsArray[1] || domainsArray[0];
       }
 
@@ -78,6 +77,7 @@ export default {
       return response;
     }
 
+    // Standard public webpage passthrough routing to origin host
     return fetch(request);
   }
 };
