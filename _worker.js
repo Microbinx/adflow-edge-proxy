@@ -1,7 +1,7 @@
 // ======================================================================
 // ADFLOW ISOLATED EDGE PROXY - HIGH-CPM RESIDENTIAL ROTATOR BUILD
 // Save Location: Your GitHub Repository -> _worker.js
-// FIXED: Stream Locking, Anti-WebRTC Leaks, & Geolocation Symmetry
+// FIXED: Repaired stream locks by reading text blocks before transit.
 // ======================================================================
 
 const NETWORKS = {
@@ -14,7 +14,6 @@ const NETWORKS = {
 
 const ORIGIN_SERVER = 'microbim.name.ng'; 
 
-// 🗺️ HIGH-CPM GLOBAL RESIDENTIAL & CARRIER IP POOLS
 const HIGH_CPM_POOLS = {
   'US': [ 
     '172.56.21.84', '172.56.42.190', '66.249.83.41', '66.249.92.115',
@@ -45,6 +44,12 @@ export default {
     const folder = pathParts[0] ? pathParts[0].toLowerCase() : ''; 
 
     const hasActiveBody = ['POST', 'PUT', 'PATCH', 'DELETE'].includes(request.method);
+    
+    // ⚡ FIXED: Safely read incoming text body to prevent stream locking exceptions
+    let requestBodyText = null;
+    if (hasActiveBody) {
+      requestBodyText = await request.text();
+    }
 
     // 1. HARDENED SECURITY BYPASS
     if (
@@ -57,7 +62,7 @@ export default {
       return fetch(targetOriginUrl, { 
         method: request.method, 
         headers: request.headers, 
-        body: hasActiveBody ? request.clone().body : null 
+        body: requestBodyText 
       });
     }
 
@@ -97,7 +102,7 @@ export default {
       const response = await fetch(realTargetUrl, {
         method: request.method,
         headers: advancedHeaders,
-        body: hasActiveBody ? request.clone().body : null
+        body: requestBodyText
       });
 
       const contentType = response.headers.get('Content-Type') || '';
@@ -127,7 +132,7 @@ export default {
     return fetch(defaultSiteUrl, { 
       method: request.method, 
       headers: nativeSiteHeaders,
-      body: hasActiveBody ? request.clone().body : null
+      body: requestBodyText
     });
   }
 };
