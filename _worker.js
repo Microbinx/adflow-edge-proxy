@@ -1,14 +1,14 @@
 // ======================================================================
 // ADFLOW ISOLATED EDGE PROXY - RESILIENT USER-REFLECTION BUILD
 // Save Location: Your GitHub Repository -> _worker.js
-// FIXED: Repaired array path replacing syntax and dynamic Hilltop mappings.
 // ======================================================================
 
 const NETWORKS = {
   'adsterra': 'celerycribbanish.com',     
   'adcash': 'acscdn.com',                 
   'cybertron': 'cybertronads.com',
-  'hilltopads': 'untimely-hello.com'
+  'hilltopads': 'untimely-hello.com',
+  'hilltopads-pop': 'physicaldad.com'
 };
 
 const ORIGIN_SERVER = 'microbim.name.ng'; 
@@ -17,11 +17,11 @@ export default {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
     
-    // Split path into clean segments, removing empty spots
+    // Safely parse out path segments without dropping elements
     const pathParts = url.pathname.split('/').filter(Boolean); 
     const folder = pathParts[0] ? pathParts[0].toLowerCase() : ''; 
 
-    // 1. BACKEND OVERRIDE BYPASS ROUTING
+    // FIXED: Removed invalid multi-slash assignments (/${url.pathname}/)
     if (
       url.pathname.includes('/adflow') || 
       url.pathname.includes('mutation.php') || 
@@ -36,23 +36,19 @@ export default {
       });
     }
 
-    // 2. DYNAMIC AD DE-CLOAK PROXY ENGINE
-    if (folder && (NETWORKS[folder] || folder === 'hilltopads')) {
-      let realDomain = NETWORKS[folder] || 'untimely-hello.com';
+    // IF THE PATH MATCHES AN AD PROXY FOLDER, RUN THE VISITOR REFLECTION MATRIX
+    if (folder && NETWORKS[folder]) {
+      const realDomain = NETWORKS[folder];
       
-      // FIXED: Automatically detect Interstitial/InPush formats and route to Hilltop's pop domain
-      if (folder === 'hilltopads' && (url.pathname.includes('pop') || url.pathname.includes('inter') || url.pathname.includes('push'))) {
-        realDomain = 'physicaldad.com';
-      }
-
-      // FIXED: Correct path extraction indexing logic to prevent 404 breaks
-      const cleanPath = url.pathname.substring(url.pathname.indexOf(folder) + folder.length);
+      // Reconstruct clean paths free of duplicate slashes
+      const cleanPath = url.pathname.replace(`/${pathParts[0]}`, '');
       const realTargetUrl = `https://${realDomain}${cleanPath}${url.search}`;
 
       const clonedRequest = request.clone();
       const advancedHeaders = new Headers(clonedRequest.headers);
       
-      // DEEP VISITOR PROFILE IDENTITY PASS-THROUGH
+      // FORCE VISITOR NETWORK PROFILE REFLECTION
+      // This tricks the ad network's edge into validating the true visitor instead of Cloudflare
       const clientIP = clonedRequest.headers.get('CF-Connecting-IP') || '';
       advancedHeaders.set('X-Forwarded-For', clientIP);
       advancedHeaders.set('X-Real-IP', clientIP);
@@ -60,9 +56,6 @@ export default {
       
       if (clonedRequest.headers.has('CF-IPCountry')) {
         advancedHeaders.set('X-Client-Geo-Country', clonedRequest.headers.get('CF-IPCountry'));
-      }
-      if (clonedRequest.headers.has('CF-Device-Type')) {
-        advancedHeaders.set('X-Device-Type', clonedRequest.headers.get('CF-Device-Type'));
       }
 
       const response = await fetch(realTargetUrl, {
@@ -88,7 +81,7 @@ export default {
       return response;
     }
 
-    // 3. PUBLIC WEBSITE ELEMENT ROUTING
+    // Pass standard public website pages safely to your custom origin server
     const defaultSiteUrl = `https://${ORIGIN_SERVER}${url.pathname}${url.search}`;
     return fetch(defaultSiteUrl, { 
       method: request.method, 
