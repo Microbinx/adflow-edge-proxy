@@ -1,7 +1,7 @@
 // ======================================================================
 // ADFLOW ISOLATED EDGE PROXY - HIGH-CPM RESIDENTIAL ROTATOR BUILD
 // Save Location: Your GitHub Repository -> _worker.js
-// UPGRADED: Anti-WebRTC Leaks, DNS Leak Shield, & Geolocation Symmetry
+// FIXED: Stream Locking, Anti-WebRTC Leaks, & Geolocation Symmetry
 // ======================================================================
 
 const NETWORKS = {
@@ -16,19 +16,19 @@ const ORIGIN_SERVER = 'microbim.name.ng';
 
 // 🗺️ HIGH-CPM GLOBAL RESIDENTIAL & CARRIER IP POOLS
 const HIGH_CPM_POOLS = {
-  'US': [ // United States - Highest CPM Tier
+  'US': [ 
     '172.56.21.84', '172.56.42.190', '66.249.83.41', '66.249.92.115',
     '98.137.12.56', '98.137.45.201', '107.77.210.44', '107.77.218.132'
   ],
-  'GB': [ // United Kingdom
+  'GB': [ 
     '25.102.34.89', '25.102.45.201', '82.165.12.44', '82.165.44.190',
     '146.198.4.22', '146.198.23.104', '185.86.12.87', '185.86.56.14'
   ],
-  'DE': [ // Germany
+  'DE': [ 
     '46.112.3.49',  '46.112.22.118', '78.46.102.33', '78.46.204.76',
     '95.90.5.12',   '95.90.67.90',   '176.9.9.43',   '176.9.77.21'
   ],
-  'CA': [ // Canada
+  'CA': [ 
     '184.75.1.66',  '184.75.88.109', '198.50.4.15',  '198.50.99.210',
     '204.101.5.11', '204.101.44.88', '64.233.12.41', '64.233.56.110'
   ]
@@ -57,7 +57,7 @@ export default {
       return fetch(targetOriginUrl, { 
         method: request.method, 
         headers: request.headers, 
-        body: hasActiveBody ? request.body : null 
+        body: hasActiveBody ? request.clone().body : null 
       });
     }
 
@@ -71,7 +71,7 @@ export default {
       advancedHeaders.set('Accept-Encoding', 'identity');
       advancedHeaders.set('Host', realDomain);
 
-      // 🛡️ 2A. COMPLETE RESIDENTIAL ANONYMIZER: Wipes WebRTC, DNS, and Proxy Leaks completely
+      // 🛡️ 2A. COMPLETE RESIDENTIAL ANONYMIZER
       const leakyHeaders = [
         'Via', 'Forwarded', 'X-Forwarded', 'X-Forwarded-By', 'Forwarded-For',
         'Proxy-Connection', 'Max-Forwards', 'X-Client-IP', 'X-Real-IP',
@@ -85,12 +85,11 @@ export default {
       const currentPool = HIGH_CPM_POOLS[selectedCountry];
       const maskedIP = currentPool[Math.floor(Math.random() * currentPool.length)];
 
-      // ⚡ 2C. ENFORCE PERFECT GEOLOCATION SYMMETRY (Fixes DNS & Profile Leaks)
+      // ⚡ 2C. ENFORCE PERFECT GEOLOCATION SYMMETRY
       advancedHeaders.set('X-Forwarded-For', maskedIP);
       advancedHeaders.set('X-Real-IP', maskedIP);
       advancedHeaders.set('Client-IP', maskedIP);
       
-      // Force headers to claim they live inside the high-paying country profile natively
       advancedHeaders.set('CF-IPCountry', selectedCountry); 
       advancedHeaders.set('X-Client-Geo-Country', selectedCountry);
       advancedHeaders.set('X-Forwarded-Proto', 'https');
@@ -98,7 +97,7 @@ export default {
       const response = await fetch(realTargetUrl, {
         method: request.method,
         headers: advancedHeaders,
-        body: hasActiveBody ? request.body.clone() : null
+        body: hasActiveBody ? request.clone().body : null
       });
 
       const contentType = response.headers.get('Content-Type') || '';
@@ -128,7 +127,7 @@ export default {
     return fetch(defaultSiteUrl, { 
       method: request.method, 
       headers: nativeSiteHeaders,
-      body: hasActiveBody ? request.body : null
+      body: hasActiveBody ? request.clone().body : null
     });
   }
 };
