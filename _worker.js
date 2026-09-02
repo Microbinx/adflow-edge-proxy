@@ -1,7 +1,7 @@
 // ======================================================================
 // ADFLOW ISOLATED EDGE PROXY - HIGH-CPM RESIDENTIAL ROTATOR BUILD
 // Save Location: Your GitHub Repository -> _worker.js
-// FIXED: Repaired stream locks by reading text blocks before transit.
+// FIXED: Added proxy string rule protection layers for scripts
 // ======================================================================
 
 const NETWORKS = {
@@ -14,6 +14,7 @@ const NETWORKS = {
 
 const ORIGIN_SERVER = 'microbim.name.ng'; 
 
+// 🗺️ HIGH-CPM GLOBAL RESIDENTIAL & CARRIER IP POOLS
 const HIGH_CPM_POOLS = {
   'US': [ 
     '172.56.21.84', '172.56.42.190', '66.249.83.41', '66.249.92.115',
@@ -44,12 +45,6 @@ export default {
     const folder = pathParts[0] ? pathParts[0].toLowerCase() : ''; 
 
     const hasActiveBody = ['POST', 'PUT', 'PATCH', 'DELETE'].includes(request.method);
-    
-    // ⚡ FIXED: Safely read incoming text body to prevent stream locking exceptions
-    let requestBodyText = null;
-    if (hasActiveBody) {
-      requestBodyText = await request.text();
-    }
 
     // 1. HARDENED SECURITY BYPASS
     if (
@@ -62,7 +57,7 @@ export default {
       return fetch(targetOriginUrl, { 
         method: request.method, 
         headers: request.headers, 
-        body: requestBodyText 
+        body: hasActiveBody ? request.clone().body : null 
       });
     }
 
@@ -102,15 +97,18 @@ export default {
       const response = await fetch(realTargetUrl, {
         method: request.method,
         headers: advancedHeaders,
-        body: requestBodyText
+        body: hasActiveBody ? request.clone().body : null
       });
 
       const contentType = response.headers.get('Content-Type') || '';
       if (contentType.includes('javascript') || contentType.includes('html')) {
         let text = await response.text();
         
-        const cleanRegex = new RegExp(escapeRegExpPattern(realDomain), 'g');
-        text = text.replace(cleanRegex, `${url.hostname}/${folder}`);
+        // ⚡ FIX: Protect core structural execution configuration objects from getting replaced
+        if (!text.includes('initPlacement') && !text.includes('zonePlacementProperties')) {
+            const cleanRegex = new RegExp(escapeRegExpPattern(realDomain), 'g');
+            text = text.replace(cleanRegex, `${url.hostname}/${folder}`);
+        }
         
         const outboundHeaders = new Headers(response.headers);
         outboundHeaders.set('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0');
@@ -132,7 +130,7 @@ export default {
     return fetch(defaultSiteUrl, { 
       method: request.method, 
       headers: nativeSiteHeaders,
-      body: requestBodyText
+      body: hasActiveBody ? request.clone().body : null
     });
   }
 };
