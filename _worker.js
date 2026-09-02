@@ -1,7 +1,7 @@
 // ======================================================================
 // ADFLOW ISOLATED EDGE PROXY - HIGH-CPM RESIDENTIAL ROTATOR BUILD
 // Save Location: Your GitHub Repository -> _worker.js
-// FIXED: Added proxy string rule protection layers for scripts
+// RESTORED: Stable dynamic routing core with multi-country IP pools.
 // ======================================================================
 
 const NETWORKS = {
@@ -46,7 +46,7 @@ export default {
 
     const hasActiveBody = ['POST', 'PUT', 'PATCH', 'DELETE'].includes(request.method);
 
-    // 1. HARDENED SECURITY BYPASS
+    // 1. HARDENED SECURITY BYPASS (Pipes control panel configurations cleanly)
     if (
       url.pathname.includes('/adflow') || 
       url.pathname.includes('mutation.php') || 
@@ -57,7 +57,7 @@ export default {
       return fetch(targetOriginUrl, { 
         method: request.method, 
         headers: request.headers, 
-        body: hasActiveBody ? request.clone().body : null 
+        body: hasActiveBody ? request.body : null 
       });
     }
 
@@ -71,7 +71,7 @@ export default {
       advancedHeaders.set('Accept-Encoding', 'identity');
       advancedHeaders.set('Host', realDomain);
 
-      // 🛡️ 2A. COMPLETE RESIDENTIAL ANONYMIZER
+      // 🛡️ 2A. COMPLETE RESIDENTIAL ANONYMIZER (Strips WebRTC and proxy leak headers)
       const leakyHeaders = [
         'Via', 'Forwarded', 'X-Forwarded', 'X-Forwarded-By', 'Forwarded-For',
         'Proxy-Connection', 'Max-Forwards', 'X-Client-IP', 'X-Real-IP',
@@ -97,18 +97,15 @@ export default {
       const response = await fetch(realTargetUrl, {
         method: request.method,
         headers: advancedHeaders,
-        body: hasActiveBody ? request.clone().body : null
+        body: hasActiveBody ? request.body : null
       });
 
       const contentType = response.headers.get('Content-Type') || '';
       if (contentType.includes('javascript') || contentType.includes('html')) {
         let text = await response.text();
         
-        // ⚡ FIX: Protect core structural execution configuration objects from getting replaced
-        if (!text.includes('initPlacement') && !text.includes('zonePlacementProperties')) {
-            const cleanRegex = new RegExp(escapeRegExpPattern(realDomain), 'g');
-            text = text.replace(cleanRegex, `${url.hostname}/${folder}`);
-        }
+        const cleanRegex = new RegExp(escapeRegExpPattern(realDomain), 'g');
+        text = text.replace(cleanRegex, `${url.hostname}/${folder}`);
         
         const outboundHeaders = new Headers(response.headers);
         outboundHeaders.set('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0');
@@ -130,7 +127,7 @@ export default {
     return fetch(defaultSiteUrl, { 
       method: request.method, 
       headers: nativeSiteHeaders,
-      body: hasActiveBody ? request.clone().body : null
+      body: hasActiveBody ? request.body : null
     });
   }
 };
