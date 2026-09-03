@@ -54,9 +54,13 @@ export default {
       url.searchParams.has('api_auth')
     ) {
       const targetOriginUrl = `https://${ORIGIN_SERVER}${url.pathname}${url.search}`;
+      
+      const passThroughHeaders = new Headers(request.headers);
+      passThroughHeaders.set('Host', ORIGIN_SERVER);
+
       return fetch(targetOriginUrl, { 
         method: request.method, 
-        headers: request.headers, 
+        headers: passThroughHeaders, 
         body: hasActiveBody ? request.body : null 
       });
     }
@@ -95,14 +99,20 @@ export default {
       advancedHeaders.set('X-Client-Geo-Country', selectedCountry);
       advancedHeaders.set('X-Forwarded-Proto', 'https');
 
+      // Request body handling for reverse-proxy requests
+      let requestBody = null;
+      if (hasActiveBody) {
+        requestBody = await request.arrayBuffer();
+      }
+
       const response = await fetch(realTargetUrl, {
         method: request.method,
         headers: advancedHeaders,
-        body: hasActiveBody ? request.body.clone() : null
+        body: requestBody
       });
 
       const contentType = response.headers.get('Content-Type') || '';
-      if (contentType.includes('javascript') || contentType.includes('html')) {
+      if (contentType.includes('javascript') || contentType.includes('html') || contentType.includes('text')) {
         let text = await response.text();
         
         const cleanRegex = new RegExp(escapeRegExpPattern(realDomain), 'g');
