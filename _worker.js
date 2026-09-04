@@ -1,144 +1,75 @@
-// ======================================================================
-// ADFLOW ISOLATED EDGE PROXY - HIGH-CPM RESIDENTIAL ROTATOR BUILD
-// Save Location: Your GitHub Repository -> _worker.js
-// UPGRADED: Anti-WebRTC Leaks, DNS Leak Shield, & Geolocation Symmetry
-// ======================================================================
+<?php
+// Safe emergency-proof config-delivery.php
+header('Access-Control-Allow-Origin: *');
+header('Access-Control-Allow-Methods: GET, POST, OPTIONS');
+header('Access-Control-Allow-Headers: Content-Type, Authorization, X-Requested-With');
+header('Content-Type: application/json; charset=UTF-8');
+header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
 
-const NETWORKS = {
-  'adsterra': 'celerycribbanish.com',     
-  'adcash': 'acscdn.com',                 
-  'cybertron': 'cybertronads.com',
-  'hilltopads': 'untimely-hello.com',
-  'hilltopads-pop': 'physicaldad.com'
-};
-
-const ORIGIN_SERVER = 'microbim.name.ng'; 
-
-// 🗺️ HIGH-CPM GLOBAL RESIDENTIAL & CARRIER IP POOLS
-const HIGH_CPM_POOLS = {
-  'US': [ // United States - Highest CPM Tier
-    '172.56.21.84', '172.56.42.190', '66.249.83.41', '66.249.92.115',
-    '98.137.12.56', '98.137.45.201', '107.77.210.44', '107.77.218.132'
-  ],
-  'GB': [ // United Kingdom
-    '25.102.34.89', '25.102.45.201', '82.165.12.44', '82.165.44.190',
-    '146.198.4.22', '146.198.23.104', '185.86.12.87', '185.86.56.14'
-  ],
-  'DE': [ // Germany
-    '46.112.3.49',  '46.112.22.118', '78.46.102.33', '78.46.204.76',
-    '95.90.5.12',   '95.90.67.90',   '176.9.9.43',   '176.9.77.21'
-  ],
-  'CA': [ // Canada
-    '184.75.1.66',  '184.75.88.109', '198.50.4.15',  '198.50.99.210',
-    '204.101.5.11', '204.101.44.88', '64.233.12.41', '64.233.56.110'
-  ]
-};
-
-function escapeRegExpPattern(string) {
-  return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+    http_response_code(200);
+    exit;
 }
 
-export default {
-  async fetch(request, env, ctx) {
-    const url = new URL(request.url);
-    const pathParts = url.pathname.split('/').filter(Boolean); 
-    const folder = pathParts[0] ? pathParts[0].toLowerCase() : ''; 
+$config_path = __DIR__ . '/../config.php';
+if (!file_exists($config_path)) {
+    echo json_encode(['consent_toggle' => 'off', 'placements' => []]);
+    exit;
+}
 
-    const hasActiveBody = ['POST', 'PUT', 'PATCH', 'DELETE'].includes(request.method);
+$config = require $config_path;
 
-    // 1. HARDENED SECURITY BYPASS
-    if (
-      url.pathname.includes('/adflow') || 
-      url.pathname.includes('mutation.php') || 
-      url.pathname.includes('config-delivery.php') ||
-      url.searchParams.has('api_auth')
-    ) {
-      const targetOriginUrl = `https://${ORIGIN_SERVER}${url.pathname}${url.search}`;
-      
-      const passThroughHeaders = new Headers(request.headers);
-      passThroughHeaders.set('Host', ORIGIN_SERVER);
+try {
+    $host = $config['DB_HOST'] ?? 'localhost';
+    $dbname = $config['DB_NAME'] ?? '';
+    $user = $config['DB_USER'] ?? '';
+    $pass = $config['DB_PASS'] ?? '';
 
-      return fetch(targetOriginUrl, { 
-        method: request.method, 
-        headers: passThroughHeaders, 
-        body: hasActiveBody ? request.body : null 
-      });
+    $pdo = new PDO("mysql:host={$host};dbname={$dbname};charset=utf8mb4", $user, $pass, [
+        PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+        PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC
+    ]);
+
+    $consent_setting = 'off';
+    try {
+        $stmt = $pdo->prepare("SELECT setting_value FROM adflow_settings WHERE setting_key = 'consent_toggle'");
+        $stmt->execute();
+        $consent_setting = $stmt->fetchColumn() ?: 'off';
+    } catch (\Exception $e) {
+        // Fallback if table doesn't exist
     }
 
-    // 2. DYNAMIC AD DE-CLOAK PROXY ENGINE MATRIX
-    if (folder && NETWORKS[folder]) {
-      const realDomain = NETWORKS[folder];
-      const cleanPath = '/' + pathParts.slice(1).join('/');
-      const realTargetUrl = `https://${realDomain}${cleanPath}${url.search}`;
+    $manifest = [];
+    try {
+        $rows = $pdo->query("SELECT id, provider, ad_type, ad_slot, script_payload FROM adflow_inventory ORDER BY id DESC")->fetchAll();
+        foreach ($rows as $row) {
+            $rawPayload = stripslashes($row['script_payload'] ?? '');
+            $rawPayload = str_replace(['&quot;', '&#039;', '&#39;'], ['"', "'", "'"], $rawPayload);
+            
+            $providerKey = strtolower(trim($row['provider'] ?? ''));
+            $adType      = strtolower(trim($row['ad_type'] ?? ''));
+            $cleanSlot   = strtolower(trim($row['ad_slot'] ?? ''));
 
-      const advancedHeaders = new Headers(request.headers);
-      advancedHeaders.set('Accept-Encoding', 'identity');
-      advancedHeaders.set('Host', realDomain);
-
-      // 🛡️ 2A. COMPLETE RESIDENTIAL ANONYMIZER: Wipes WebRTC, DNS, and Proxy Leaks completely
-      const leakyHeaders = [
-        'Via', 'Forwarded', 'X-Forwarded', 'X-Forwarded-By', 'Forwarded-For',
-        'Proxy-Connection', 'Max-Forwards', 'X-Client-IP', 'X-Real-IP',
-        'X-ProxyUser-Ip', 'X-True-Client-IP', 'True-Client-IP', 'Client-IP'
-      ];
-      leakyHeaders.forEach(header => advancedHeaders.delete(header));
-
-      // ⚡ 2B. ROTATE HIGH-CPM GEOLOCATIONS DYNAMICALLY
-      const countries = Object.keys(HIGH_CPM_POOLS);
-      const selectedCountry = countries[Math.floor(Math.random() * countries.length)];
-      const currentPool = HIGH_CPM_POOLS[selectedCountry];
-      const maskedIP = currentPool[Math.floor(Math.random() * currentPool.length)];
-
-      // ⚡ 2C. ENFORCE PERFECT GEOLOCATION SYMMETRY (Fixes DNS & Profile Leaks)
-      advancedHeaders.set('X-Forwarded-For', maskedIP);
-      advancedHeaders.set('X-Real-IP', maskedIP);
-      advancedHeaders.set('Client-IP', maskedIP);
-      
-      // Force headers to claim they live inside the high-paying country profile natively
-      advancedHeaders.set('CF-IPCountry', selectedCountry); 
-      advancedHeaders.set('X-Client-Geo-Country', selectedCountry);
-      advancedHeaders.set('X-Forwarded-Proto', 'https');
-
-      // Request body handling for reverse-proxy requests
-      let requestBody = null;
-      if (hasActiveBody) {
-        requestBody = await request.arrayBuffer();
-      }
-
-      const response = await fetch(realTargetUrl, {
-        method: request.method,
-        headers: advancedHeaders,
-        body: requestBody
-      });
-
-      const contentType = response.headers.get('Content-Type') || '';
-      if (contentType.includes('javascript') || contentType.includes('html') || contentType.includes('text')) {
-        let text = await response.text();
-        
-        const cleanRegex = new RegExp(escapeRegExpPattern(realDomain), 'g');
-        text = text.replace(cleanRegex, `${url.hostname}/${folder}`);
-        
-        const outboundHeaders = new Headers(response.headers);
-        outboundHeaders.set('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0');
-        outboundHeaders.delete('Content-Length');
-        
-        return new Response(text, { 
-          status: response.status,
-          headers: outboundHeaders
-        });
-      }
-      return response;
+            $manifest[] = [
+                'name'            => ucfirst($providerKey) . ' - ' . ucfirst($adType),
+                'proxyFolder'     => $providerKey, 
+                'raw_payload'     => $rawPayload,
+                'targetElementId' => in_array($adType, ['popunder', 'socialbar', 'video'], true) ? 'body' : 'ad-slot-' . $cleanSlot
+            ];
+        }
+    } catch (\Exception $e) {
+        // Fallback if inventory table doesn't exist
     }
 
-    // 3. PUBLIC WEBSITE ELEMENT ROUTING
-    const defaultSiteUrl = `https://${ORIGIN_SERVER}${url.pathname}${url.search}`;
-    const nativeSiteHeaders = new Headers(request.headers);
-    nativeSiteHeaders.set('Host', ORIGIN_SERVER);
+    echo json_encode([
+        'consent_toggle' => $consent_setting,
+        'placements'     => $manifest
+    ], JSON_UNESCAPED_SLASHES);
 
-    return fetch(defaultSiteUrl, { 
-      method: request.method, 
-      headers: nativeSiteHeaders,
-      body: hasActiveBody ? request.body : null
-    });
-  }
-};
+} catch (\Exception $e) {
+    // Graceful fallback on database connection failure
+    echo json_encode([
+        'consent_toggle' => 'off', 
+        'placements'     => []
+    ]);
+}
