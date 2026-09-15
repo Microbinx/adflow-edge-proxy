@@ -1,7 +1,7 @@
 // ======================================================================
-// ADFLOW ISOLATED EDGE PROXY - HIGH-CPM RESIDENTIAL ROTATOR BUILD
+// ADFLOW ISOLATED EDGE PROXY - PRODUCTION-SAFE ANTI-FRAUD DE-CLOAK PROXY
 // Save Location: Your GitHub Repository -> _worker.js
-// STATUS: 100% Corrected & Cleaned. Removed legacy endpoints.
+// STATUS: 100% Corrected. Restored Real IP/Geo Metrics & Native Tracking Folders.
 // ======================================================================
 
 const NETWORKS = {
@@ -13,26 +13,6 @@ const NETWORKS = {
 };
 
 const ORIGIN_SERVER = 'microbim.name.ng'; 
-
-// 🗺️ HIGH-CPM GLOBAL RESIDENTIAL & CARRIER IP POOLS
-const HIGH_CPM_POOLS = {
-  'US': [
-    '172.56.21.84', '172.56.42.190', '66.249.83.41', '66.249.92.115',
-    '98.137.12.56', '98.137.45.201', '107.77.210.44', '107.77.218.132'
-  ],
-  'GB': [
-    '25.102.34.89', '25.102.45.201', '82.165.12.44', '82.165.44.190',
-    '146.198.4.22', '146.198.23.104', '185.86.12.87', '185.86.56.14'
-  ],
-  'DE': [
-    '46.112.3.49',  '46.112.22.118', '78.46.102.33', '78.46.204.76',
-    '95.90.5.12',   '95.90.67.90',   '176.9.9.43',   '176.9.77.21'
-  ],
-  'CA': [
-    '184.75.1.66',  '184.75.88.109', '198.50.4.15',  '198.50.99.210',
-    '204.101.5.11', '204.101.44.88', '64.233.12.41', '64.233.56.110'
-  ]
-};
 
 function escapeRegExpPattern(string) {
   return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
@@ -46,7 +26,9 @@ export default {
 
     const hasActiveBody = ['POST', 'PUT', 'PATCH', 'DELETE'].includes(request.method);
 
-    // 1. HARDENED SECURITY & CONTENT PASS-THROUGH BYPASS
+    // ======================================================================
+    // 🛡️ 1. HARDENED SECURITY & CONTENT PASS-THROUGH BYPASS
+    // ======================================================================
     if (
       url.pathname.includes('/adflow') || 
       url.pathname.includes('mutation.php') || 
@@ -57,7 +39,7 @@ export default {
     ) {
       const targetOriginUrl = `https://${ORIGIN_SERVER}${url.pathname}${url.search}`;
       
-      // Safe fallback option: Clone the request to keep it from breaking midway
+      // FIX: Clone the request to prevent stream destruction crashes on form submissions
       const clonedRequestForOrigin = request.clone();
       
       return fetch(targetOriginUrl, { 
@@ -67,7 +49,9 @@ export default {
       });
     }
 
-    // 2. DYNAMIC AD DE-CLOAK PROXY ENGINE MATRIX
+    // ======================================================================
+    // 🚀 2. DYNAMIC AD DE-CLOAK PROXY ENGINE MATRIX
+    // ======================================================================
     if (folder && NETWORKS[folder]) {
       const realDomain = NETWORKS[folder];
       const cleanPath = '/' + pathParts.slice(1).join('/');
@@ -77,6 +61,7 @@ export default {
       advancedHeaders.set('Accept-Encoding', 'identity');
       advancedHeaders.set('Host', realDomain);
 
+      // 🛡️ 2A. PRIVACY ENHANCEMENT: Wipes identifying backend server fields completely
       const leakyHeaders = [
         'Via', 'Forwarded', 'X-Forwarded', 'X-Forwarded-By', 'Forwarded-For',
         'Proxy-Connection', 'Max-Forwards', 'X-Client-IP', 'X-Real-IP',
@@ -84,24 +69,29 @@ export default {
       ];
       leakyHeaders.forEach(header => advancedHeaders.delete(header));
 
-      const countries = Object.keys(HIGH_CPM_POOLS);
-      const selectedCountry = countries[Math.floor(Math.random() * countries.length)];
-      const currentPool = HIGH_CPM_POOLS[selectedCountry];
-      const maskedIP = currentPool[Math.floor(Math.random() * currentPool.length)];
-
-      advancedHeaders.set('X-Forwarded-For', maskedIP);
-      advancedHeaders.set('X-Real-IP', maskedIP);
-      advancedHeaders.set('Client-IP', maskedIP);
-      advancedHeaders.set('CF-IPCountry', selectedCountry); 
-      advancedHeaders.set('X-Client-Geo-Country', selectedCountry);
+      // ⚡ 2B. ANTI-FRAUD MAPPING: Feeds the ad network the real visitor's IP and Country.
+      // This stops them from marking your traffic as automated data center bots!
+      if (request.headers.has('CF-Connecting-IP')) {
+          const userRealIP = request.headers.get('CF-Connecting-IP');
+          advancedHeaders.set('X-Forwarded-For', userRealIP);
+          advancedHeaders.set('X-Real-IP', userRealIP);
+          advancedHeaders.set('Client-IP', userRealIP);
+      }
+      
+      if (request.headers.has('CF-IPCountry')) {
+          advancedHeaders.set('CF-IPCountry', request.headers.get('CF-IPCountry'));
+      }
+      
       advancedHeaders.set('X-Forwarded-Proto', 'https');
 
+      // Fetch the ad asset from the network using our clean headers
       const response = await fetch(realTargetUrl, {
         method: request.method,
         headers: advancedHeaders,
         body: hasActiveBody ? request.clone().body : null
       });
 
+      // Rewrite domain footprints inside Javascript/HTML tracking assets on the fly
       const contentType = response.headers.get('Content-Type') || '';
       if (contentType.includes('javascript') || contentType.includes('html')) {
         let text = await response.text();
@@ -121,7 +111,9 @@ export default {
       return response;
     }
 
-    // 3. PUBLIC WEBSITE ELEMENT ROUTING
+    // ======================================================================
+    // 🌐 3. PUBLIC WEBSITE ELEMENT ROUTING
+    // ======================================================================
     const defaultSiteUrl = `https://${ORIGIN_SERVER}${url.pathname}${url.search}`;
     const nativeSiteHeaders = new Headers(request.headers);
     nativeSiteHeaders.set('Host', ORIGIN_SERVER);
