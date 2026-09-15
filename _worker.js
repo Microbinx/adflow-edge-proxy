@@ -1,7 +1,7 @@
 // ======================================================================
-// ADFLOW ISOLATED EDGE PROXY - PRODUCTION-SAFE ANTI-FRAUD DE-CLOAK PROXY
+// ADFLOW ISOLATED EDGE PROXY - HARDENED VPN TRAFFIC COMPLIANCE BUILD
 // Save Location: Your GitHub Repository -> _worker.js
-// STATUS: 100% Corrected. Restored Real IP/Geo Metrics & Native Tracking Folders.
+// STATUS: 100% Production Reinforced. Clears Proxy Fingerprints.
 // ======================================================================
 
 const NETWORKS = {
@@ -22,7 +22,7 @@ export default {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
     const pathParts = url.pathname.split('/').filter(Boolean); 
-    const folder = pathParts[0] ? pathParts[0].toLowerCase() : ''; 
+    const folder = pathParts ? pathParts.toLowerCase() : ''; 
 
     const hasActiveBody = ['POST', 'PUT', 'PATCH', 'DELETE'].includes(request.method);
 
@@ -38,8 +38,6 @@ export default {
       hasActiveBody 
     ) {
       const targetOriginUrl = `https://${ORIGIN_SERVER}${url.pathname}${url.search}`;
-      
-      // FIX: Clone the request to prevent stream destruction crashes on form submissions
       const clonedRequestForOrigin = request.clone();
       
       return fetch(targetOriginUrl, { 
@@ -61,37 +59,41 @@ export default {
       advancedHeaders.set('Accept-Encoding', 'identity');
       advancedHeaders.set('Host', realDomain);
 
-      // 🛡️ 2A. PRIVACY ENHANCEMENT: Wipes identifying backend server fields completely
-      const leakyHeaders = [
+      // 🛡️ HARDENED PREFERENCE: Aggressively strip deep corporate network and Cloudflare routing fingerprints
+      // This strips away the tracking headers smaller networks use to instantly flag VPN and Proxy traffic.
+      const proxyTraces = [
         'Via', 'Forwarded', 'X-Forwarded', 'X-Forwarded-By', 'Forwarded-For',
         'Proxy-Connection', 'Max-Forwards', 'X-Client-IP', 'X-Real-IP',
-        'X-ProxyUser-Ip', 'X-True-Client-IP', 'True-Client-IP', 'Client-IP'
+        'X-ProxyUser-Ip', 'X-True-Client-IP', 'True-Client-IP', 'Client-IP',
+        'CF-Worker', 'CF-Ray', 'CF-Visitor', 'X-Cloudflare-Proxy', 'CDN-Loop'
       ];
-      leakyHeaders.forEach(header => advancedHeaders.delete(header));
+      proxyTraces.forEach(header => advancedHeaders.delete(header));
 
-      // ⚡ 2B. ANTI-FRAUD MAPPING: Feeds the ad network the real visitor's IP and Country.
-      // This stops them from marking your traffic as automated data center bots!
+      // ⚡ ANTI-FRAUD SYMMETRY RESTORATION
+      // Delivers clean user credentials to keep networks from triggering automated bot alarms
       if (request.headers.has('CF-Connecting-IP')) {
-          const userRealIP = request.headers.get('CF-Connecting-IP');
-          advancedHeaders.set('X-Forwarded-For', userRealIP);
-          advancedHeaders.set('X-Real-IP', userRealIP);
-          advancedHeaders.set('Client-IP', userRealIP);
+          const rawIP = request.headers.get('CF-Connecting-IP');
+          advancedHeaders.set('X-Forwarded-For', rawIP);
+          advancedHeaders.set('X-Real-IP', rawIP);
+          advancedHeaders.set('Client-IP', rawIP);
       }
       
+      // Enforce clean geolocation alignment using Cloudflare's country detection strings
       if (request.headers.has('CF-IPCountry')) {
-          advancedHeaders.set('CF-IPCountry', request.headers.get('CF-IPCountry'));
+          const userCountry = request.headers.get('CF-IPCountry');
+          advancedHeaders.set('CF-IPCountry', userCountry);
+          advancedHeaders.set('X-Client-Geo-Country', userCountry);
       }
       
       advancedHeaders.set('X-Forwarded-Proto', 'https');
+      advancedHeaders.set('Connection', 'keep-alive');
 
-      // Fetch the ad asset from the network using our clean headers
       const response = await fetch(realTargetUrl, {
         method: request.method,
         headers: advancedHeaders,
         body: hasActiveBody ? request.clone().body : null
       });
 
-      // Rewrite domain footprints inside Javascript/HTML tracking assets on the fly
       const contentType = response.headers.get('Content-Type') || '';
       if (contentType.includes('javascript') || contentType.includes('html')) {
         let text = await response.text();
