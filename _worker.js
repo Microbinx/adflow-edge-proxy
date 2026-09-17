@@ -57,52 +57,52 @@ export default {
     <priority>1.00</priority>
   </url>
   <url>
-    <loc>https://microbim.name.ngabout</loc>
+    <loc>https://microbim.name.ng/about</loc>
     <changefreq>monthly</changefreq>
     <priority>0.80</priority>
   </url>
   <url>
-    <loc>https://microbim.name.ngcontact</loc>
+    <loc>https://microbim.name.ng/contact</loc>
     <changefreq>monthly</changefreq>
     <priority>0.80</priority>
   </url>
   <url>
-    <loc>https://microbim.name.ngblog</loc>
+    <loc>https://microbim.name.ng/blog</loc>
     <changefreq>weekly</changefreq>
     <priority>0.80</priority>
   </url>
   <url>
-    <loc>https://microbim.name.ngwebsite</loc>
+    <loc>https://microbim.name.ng/website</loc>
     <changefreq>monthly</changefreq>
     <priority>0.70</priority>
   </url>
   <url>
-    <loc>https://microbim.name.ngmobileapp</loc>
+    <loc>https://microbim.name.ng/mobileapp</loc>
     <changefreq>monthly</changefreq>
     <priority>0.70</priority>
   </url>
   <url>
-    <loc>https://microbim.name.ngsolutions</loc>
+    <loc>https://microbim.name.ng/solutions</loc>
     <changefreq>monthly</changefreq>
     <priority>0.70</priority>
   </url>
   <url>
-    <loc>https://microbim.name.ngacademy</loc>
+    <loc>https://microbim.name.ng/academy</loc>
     <changefreq>weekly</changefreq>
     <priority>0.70</priority>
   </url>
   <url>
-    <loc>https://microbim.name.ngstore</loc>
+    <loc>https://microbim.name.ng/store</loc>
     <changefreq>weekly</changefreq>
     <priority>0.75</priority>
   </url>
   <url>
-    <loc>https://microbim.name.ngdownload</loc>
+    <loc>https://microbim.name.ng/download</loc>
     <changefreq>weekly</changefreq>
     <priority>0.75</priority>
   </url>
   <url>
-    <loc>https://microbim.name.ngprivacy</loc>
+    <loc>https://microbim.name.ng/privacy</loc>
     <changefreq>yearly</changefreq>
     <priority>0.50</priority>
   </url>
