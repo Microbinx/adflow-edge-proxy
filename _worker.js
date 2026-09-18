@@ -228,36 +228,32 @@ ${blogUrlsXml}</urlset>`;
     }
 
                     // ======================================================================
-    // 🌐 3. PUBLIC WEBSITE ELEMENT ROUTING (EMULATED FIREWALL BYPASS)
+    // 🌐 3. PUBLIC WEBSITE ELEMENT ROUTING (VALID SUBDOMAIN MATRIX)
     // ======================================================================
     const defaultSiteUrl = `http://microbim.name.ng` + url.pathname + url.search;
     
-    // 1. Inherit the user's authentic browser headers
     const nativeSiteHeaders = new Headers(request.headers);
-    
-    // 2. Enforce explicit host matching required by InfinityFree's load balancers
     nativeSiteHeaders.set('Host', 'microbim.name.ng'); 
     
-    // 3. Purge Cloudflare internal markers that trigger bot alarms
+    // Clean down structural routing properties that can interfere with connection loops
     nativeSiteHeaders.delete('cf-connecting-ip');
     nativeSiteHeaders.delete('cf-ray');
     nativeSiteHeaders.delete('cf-visitor');
     nativeSiteHeaders.delete('cdn-loop');
 
-    // 4. Force strict browser emulation signatures
+    // Emulate standard user browser engine context parameters
     nativeSiteHeaders.set('User-Agent', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36');
     nativeSiteHeaders.set('Accept', 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8');
     nativeSiteHeaders.set('Accept-Language', 'en-US,en;q=0.9');
-    nativeSiteHeaders.set('Cache-Control', 'max-age=0');
-    nativeSiteHeaders.set('Upgrade-Insecure-Requests', '1');
 
     return fetch(defaultSiteUrl, { 
       method: request.method, 
       headers: nativeSiteHeaders,
       body: hasActiveBody ? request.body : null,
-      redirect: 'follow', // Follow any internal structural redirects automatically
+      redirect: 'follow', 
       cf: {
-        resolveOverride: '185.27.134.221' // Routes the call straight to the physical server
+        // ✅ FIXED: Points to a registered zone hostname instead of a raw IP string
+        resolveOverride: 'backend-direct-target.microbim.name.ng'
       }
     });
 
