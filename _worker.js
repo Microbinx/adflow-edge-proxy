@@ -227,17 +227,22 @@ ${blogUrlsXml}</urlset>`;
       return response;
     }
 
-    // ======================================================================
+        // ======================================================================
     // 🌐 3. PUBLIC WEBSITE ELEMENT ROUTING
     // ======================================================================
-    const defaultSiteUrl = `https://` + ORIGIN_SERVER + url.pathname + url.search;
+    // CHANGE `https://` TO `http://` below to bypass the invalid certificate block:
+    const defaultSiteUrl = `http://` + ORIGIN_SERVER + url.pathname + url.search;
+    
     const nativeSiteHeaders = new Headers(request.headers);
-    nativeSiteHeaders.set('Host', ORIGIN_SERVER);
+    
+    // CRITICAL: Remind the server that the visitor requested the main domain files
+    nativeSiteHeaders.set('Host', 'microbim.name.ng'); 
 
     return fetch(defaultSiteUrl, { 
       method: request.method, 
       headers: nativeSiteHeaders,
       body: hasActiveBody ? request.body : null
     });
+
   }
 };
