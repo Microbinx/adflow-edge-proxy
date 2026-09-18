@@ -228,37 +228,36 @@ ${blogUrlsXml}</urlset>`;
     }
 
                     // ======================================================================
-    // 🌐 3. PUBLIC WEBSITE ELEMENT ROUTING (FIXED NESTED PATH MATRIX)
+    // 🌐 3. PUBLIC WEBSITE ELEMENT ROUTING (SAFE SUBPAGE PROXY ENGINE)
     // ======================================================================
-    // FIX: Explicitly match the exact incoming URI path and query string string parameters
+    // Preserves the exact page subpath and query parameters requested by the user
     const defaultSiteUrl = `http://microbim.name.ng` + url.pathname + url.search;
     
     const nativeSiteHeaders = new Headers(request.headers);
     nativeSiteHeaders.set('Host', 'microbim.name.ng'); 
     
-    // Drop Cloudflare tracking variables that trigger loops or bot firewalls
+    // Purge edge markers that cause infinite loops
     nativeSiteHeaders.delete('cf-connecting-ip');
     nativeSiteHeaders.delete('cf-ray');
     nativeSiteHeaders.delete('cf-visitor');
     nativeSiteHeaders.delete('cdn-loop');
 
-    // Retain high-fidelity browser spoofing parameters across all subpages
+    // Emulate clean desktop browser capabilities
     nativeSiteHeaders.set('User-Agent', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36');
     nativeSiteHeaders.set('Accept', 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8');
-    nativeSiteHeaders.set('Accept-Language', 'en-US,en;q=0.9');
 
     try {
       return await fetch(defaultSiteUrl, { 
         method: request.method, 
         headers: nativeSiteHeaders,
         body: hasActiveBody ? request.body : null,
-        redirect: 'follow', // Follow deep application routes and internal folder paths automatically
+        redirect: 'follow', 
         cf: {
           resolveOverride: 'backend-direct-target.microbim.name.ng'
         }
       });
     } catch (err) {
-      return new Response("Origin Routing Failure on Sub-Path", { status: 524 });
+      return new Response("Origin Routing Failure on Deep Sub-Path", { status: 524 });
     }
   }
 };
