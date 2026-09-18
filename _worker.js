@@ -51,7 +51,7 @@ export default {
     // 🌐 0. EDGE-LAYER XML SITEMAP COMPILER (UNIVERSAL PARSING ENGINE)
     // ======================================================================
     if (url.pathname.toLowerCase() === '/sitemap.xml' || url.pathname.toLowerCase() === '/sitemap.php') {
-      try {
+     try {
         const dataResponse = await fetch(`https://${ORIGIN_SERVER}/sitemap-data.php`);
         const rawText = await dataResponse.text();
         
