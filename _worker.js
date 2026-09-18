@@ -3,7 +3,7 @@
 // STATUS: 100% Operational. Fixed Path Array Parsing & Added Verification Bypasses.
 // ======================================================================
 
- const NETWORKS = {
+const NETWORKS = {
   'adsterra': 'celerycribbanish.com',     
   'adcash': 'acscdn.com',                 
   'cybertron': 'cybertronads.com',
@@ -11,7 +11,7 @@
   'hilltopads-pop': 'physicaldad.com'
 };
 
-const ORIGIN_SERVER = 'backend-direct.microbim.name.ng';
+const ORIGIN_SERVER = 'microbim.name.ng';
 
 // 🗺️ HIGH-CPM GLOBAL RESIDENTIAL & CARRIER IP POOLS
 const HIGH_CPM_POOLS = {
@@ -51,7 +51,7 @@ export default {
     // 🌐 0. EDGE-LAYER XML SITEMAP COMPILER (UNIVERSAL PARSING ENGINE)
     // ======================================================================
     if (url.pathname.toLowerCase() === '/sitemap.xml' || url.pathname.toLowerCase() === '/sitemap.php') {
-     try {
+      try {
         const dataResponse = await fetch(`https://${ORIGIN_SERVER}/sitemap-data.php`);
         const rawText = await dataResponse.text();
         
@@ -63,7 +63,7 @@ export default {
           if (cleanLine.includes(',')) {
             const [slug, dateCreated] = cleanLine.split(',');
             if (slug && dateCreated) {
-              blogUrlsXml += `  <url>\n    <loc>https://microbim.name.ng${slug.trim()}</loc>\n    <lastmod>${dateCreated.trim()}</lastmod>\n    <changefreq>monthly</changefreq>\n    <priority>0.65</priority>\n  </url>\n`;
+              blogUrlsXml += `  <url>\n    <loc>https://microbim.name.ng/${slug.trim()}</loc>\n    <lastmod>${dateCreated.trim()}</lastmod>\n    <changefreq>monthly</changefreq>\n    <priority>0.65</priority>\n  </url>\n`;
             }
           }
         }
@@ -228,43 +228,16 @@ ${blogUrlsXml}</urlset>`;
     }
 
     // ======================================================================
-    // 🌐 3. PUBLIC WEBSITE ELEMENT ROUTING (FINAL LOOP-BYPASS MATRIX)
+    // 🌐 3. PUBLIC WEBSITE ELEMENT ROUTING
     // ======================================================================
-    // Protect against self-looping on the custom domain
-    if (request.headers.has('X-Worker-Loop-Protection')) {
-      return new Response("Loop Detected at Edge Layer", { status: 522 });
-    }
-
-    const defaultSiteUrl = `http://microbim.name.ng` + url.pathname + url.search;
+    const defaultSiteUrl = `https://` + ORIGIN_SERVER + url.pathname + url.search;
     const nativeSiteHeaders = new Headers(request.headers);
-    
-    // 1. Enforce validation values for the platform balancers
-    nativeSiteHeaders.set('Host', 'microbim.name.ng'); 
-    nativeSiteHeaders.set('X-Worker-Loop-Protection', 'true');
+    nativeSiteHeaders.set('Host', ORIGIN_SERVER);
 
-    // 2. Clear telemetry variables that flag automated scrapers
-    nativeSiteHeaders.delete('cf-connecting-ip');
-    nativeSiteHeaders.delete('cf-ray');
-    nativeSiteHeaders.delete('cf-visitor');
-    nativeSiteHeaders.delete('cdn-loop');
-
-    // 3. Emulate a persistent high-fidelity user agent profile
-    nativeSiteHeaders.set('User-Agent', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36');
-    nativeSiteHeaders.set('Accept', 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8');
-
-    try {
-      return await fetch(defaultSiteUrl, { 
-        method: request.method, 
-        headers: nativeSiteHeaders,
-        body: hasActiveBody ? request.body : null,
-        redirect: 'follow', 
-        cf: {
-          // ✅ SECURE BYPASS: Uses a proxied CNAME within your domain zone
-          resolveOverride: 'origin-direct.microbim.name.ng'
-        }
-      });
-    } catch (err) {
-      return new Response("Origin Routing Failure across Zone Map", { status: 524 });
-    }
-  } // <--- Closes the async fetch() function block
-};  // <--- Closes the outer export default wrapper block
+    return fetch(defaultSiteUrl, { 
+      method: request.method, 
+      headers: nativeSiteHeaders,
+      body: hasActiveBody ? request.body : null
+    });
+  }
+};
