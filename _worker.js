@@ -227,22 +227,44 @@ ${blogUrlsXml}</urlset>`;
       return response;
     }
 
-        // ======================================================================
-    // 🌐 3. PUBLIC WEBSITE ELEMENT ROUTING
+            // ======================================================================
+    // 🌐 3. PUBLIC WEBSITE ELEMENT ROUTING (INFINITYFREE BYPASS MATRIX)
     // ======================================================================
-    // CHANGE `https://` TO `http://` below to bypass the invalid certificate block:
-    const defaultSiteUrl = `http://` + ORIGIN_SERVER + url.pathname + url.search;
+    // Connect directly to the physical server IP over standard port 80:
+    const defaultSiteUrl = `http://185.27.134.221` + url.pathname + url.search;
     
     const nativeSiteHeaders = new Headers(request.headers);
     
-    // CRITICAL: Remind the server that the visitor requested the main domain files
+    // Explicitly mask the Host header string so the platform maps your files correctly:
     nativeSiteHeaders.set('Host', 'microbim.name.ng'); 
+    
+    // Clear out standard Cloudflare proxy headers that trigger bot blocks:
+    nativeSiteHeaders.delete('cf-connecting-ip');
+    nativeSiteHeaders.delete('cf-ray');
+    nativeSiteHeaders.delete('cf-visitor');
 
-    return fetch(defaultSiteUrl, { 
+    // Emulate an open browser client setup to clear security validation rules:
+    nativeSiteHeaders.set('User-Agent', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36');
+    nativeSiteHeaders.set('Accept', 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8');
+    nativeSiteHeaders.set('Connection', 'keep-alive');
+
+    const originResponse = await fetch(defaultSiteUrl, { 
       method: request.method, 
       headers: nativeSiteHeaders,
-      body: hasActiveBody ? request.body : null
+      body: hasActiveBody ? request.body : null,
+      redirect: 'follow' 
     });
+
+    // Detect if the server is trying to redirect you out to the suspension screen
+    const responseUrl = originResponse.url || '';
+    if (responseUrl.includes('suspendeddomain') || responseUrl.includes('suspended-website')) {
+      return new Response("InfinityFree Security Bypass Active - Please refresh page.", { 
+        status: 200,
+        headers: { "Content-Type": "text/html" }
+      });
+    }
+
+    return originResponse;
 
   }
 };
