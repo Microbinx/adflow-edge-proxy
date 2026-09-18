@@ -227,26 +227,17 @@ ${blogUrlsXml}</urlset>`;
       return response;
     }
 
-        // ======================================================================
-    // 🌐 3. PUBLIC WEBSITE ELEMENT ROUTING (FIXED CORRECTIONS)
+    // ======================================================================
+    // 🌐 3. PUBLIC WEBSITE ELEMENT ROUTING
     // ======================================================================
     const defaultSiteUrl = `https://` + ORIGIN_SERVER + url.pathname + url.search;
-    
-    // Explicitly rebuild clean headers to drop broken security definitions
     const nativeSiteHeaders = new Headers(request.headers);
     nativeSiteHeaders.set('Host', ORIGIN_SERVER);
-    
-    // Fixes potential TLS/SSL handshake issues on certain Cloudflare setups
-    nativeSiteHeaders.delete('cf-connecting-ip'); 
 
-    try {
-      return await fetch(defaultSiteUrl, { 
-        method: request.method, 
-        headers: nativeSiteHeaders,
-        body: hasActiveBody ? request.body : null,
-        redirect: 'manual' // Prevent inner redirect timeouts
-      });
-    } catch (e) {
-      // Fallback if the SSL connection completely drops
-      return new Response("Origin Connection Gateway Timeout Error", { status: 522 });
-    }
+    return fetch(defaultSiteUrl, { 
+      method: request.method, 
+      headers: nativeSiteHeaders,
+      body: hasActiveBody ? request.body : null
+    });
+  }
+};
