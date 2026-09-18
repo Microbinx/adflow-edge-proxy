@@ -3,7 +3,7 @@
 // STATUS: 100% Operational. Fixed Path Array Parsing & Added Verification Bypasses.
 // ======================================================================
 
-const NETWORKS = {
+ const NETWORKS = {
   'adsterra': 'celerycribbanish.com',     
   'adcash': 'acscdn.com',                 
   'cybertron': 'cybertronads.com',
