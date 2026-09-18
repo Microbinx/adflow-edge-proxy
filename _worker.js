@@ -227,22 +227,28 @@ ${blogUrlsXml}</urlset>`;
       return response;
     }
 
-                            // ======================================================================
-    // 🌐 3. PUBLIC WEBSITE ELEMENT ROUTING (UNIVERSAL WORKERS MATRIX)
+                                // ======================================================================
+    // 🌐 3. PUBLIC WEBSITE ELEMENT ROUTING (FINAL LOOP-BYPASS MATRIX)
     // ======================================================================
-    // Safely structure the target URL payload mapping
+    // Protect against self-looping on the custom domain
+    if (request.headers.has('X-Worker-Loop-Protection')) {
+      return new Response("Loop Detected at Edge Layer", { status: 522 });
+    }
+
     const defaultSiteUrl = `http://microbim.name.ng` + url.pathname + url.search;
-    
     const nativeSiteHeaders = new Headers(request.headers);
-    nativeSiteHeaders.set('Host', 'microbim.name.ng'); 
     
-    // Drop Cloudflare tracking flags to prevent internal looping errors
+    // 1. Enforce validation values for the platform balancers
+    nativeSiteHeaders.set('Host', 'microbim.name.ng'); 
+    nativeSiteHeaders.set('X-Worker-Loop-Protection', 'true');
+
+    // 2. Clear telemetry variables that flag automated scrapers
     nativeSiteHeaders.delete('cf-connecting-ip');
     nativeSiteHeaders.delete('cf-ray');
     nativeSiteHeaders.delete('cf-visitor');
     nativeSiteHeaders.delete('cdn-loop');
 
-    // Retain desktop user browser simulation flags
+    // 3. Emulate a persistent high-fidelity user agent profile
     nativeSiteHeaders.set('User-Agent', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36');
     nativeSiteHeaders.set('Accept', 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8');
 
@@ -253,12 +259,12 @@ ${blogUrlsXml}</urlset>`;
         body: hasActiveBody ? request.body : null,
         redirect: 'follow', 
         cf: {
-          // 🚀 THE FIX: Use your active workers.dev domain to punch out of the zone loop cleanly
-          resolveOverride: 'adflow-edge-proxy.brihmsgateolayinka.workers.dev'
+          // ✅ SECURE BYPASS: Uses a proxied CNAME within your domain zone
+          resolveOverride: 'origin-direct.microbim.name.ng'
         }
       });
     } catch (err) {
-      return new Response("Origin Routing Failure on Deep Sub-Path", { status: 524 });
+      return new Response("Origin Routing Failure across Zone Map", { status: 524 });
     }
-  } // <--- Closes async fetch()
-};  // <--- Closes export default
+  } // <--- Closes the async fetch() function block
+};  // <--- Closes the outer export default wrapper block
