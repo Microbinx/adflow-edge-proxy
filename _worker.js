@@ -227,7 +227,7 @@ ${blogUrlsXml}</urlset>`;
       return response;
     }
 
-                    // ======================================================================
+                        // ======================================================================
     // 🌐 3. PUBLIC WEBSITE ELEMENT ROUTING (SAFE SUBPAGE PROXY ENGINE)
     // ======================================================================
     // Preserves the exact page subpath and query parameters requested by the user
@@ -259,5 +259,5 @@ ${blogUrlsXml}</urlset>`;
     } catch (err) {
       return new Response("Origin Routing Failure on Deep Sub-Path", { status: 524 });
     }
-  }
-};
+  } // <--- Closes async fetch()
+};  // <--- Closes export default
