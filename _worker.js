@@ -11,7 +11,7 @@ const NETWORKS = {
   'hilltopads-pop': 'physicaldad.com'
 };
 
-const ORIGIN_SERVER = 'microbim.name.ng'; 
+const ORIGIN_SERVER = '185.27.134.221';
 
 // 🗺️ HIGH-CPM GLOBAL RESIDENTIAL & CARRIER IP POOLS
 const HIGH_CPM_POOLS = {
