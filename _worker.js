@@ -228,34 +228,37 @@ ${blogUrlsXml}</urlset>`;
     }
 
                     // ======================================================================
-    // 🌐 3. PUBLIC WEBSITE ELEMENT ROUTING (VALID SUBDOMAIN MATRIX)
+    // 🌐 3. PUBLIC WEBSITE ELEMENT ROUTING (FIXED NESTED PATH MATRIX)
     // ======================================================================
+    // FIX: Explicitly match the exact incoming URI path and query string string parameters
     const defaultSiteUrl = `http://microbim.name.ng` + url.pathname + url.search;
     
     const nativeSiteHeaders = new Headers(request.headers);
     nativeSiteHeaders.set('Host', 'microbim.name.ng'); 
     
-    // Clean down structural routing properties that can interfere with connection loops
+    // Drop Cloudflare tracking variables that trigger loops or bot firewalls
     nativeSiteHeaders.delete('cf-connecting-ip');
     nativeSiteHeaders.delete('cf-ray');
     nativeSiteHeaders.delete('cf-visitor');
     nativeSiteHeaders.delete('cdn-loop');
 
-    // Emulate standard user browser engine context parameters
+    // Retain high-fidelity browser spoofing parameters across all subpages
     nativeSiteHeaders.set('User-Agent', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36');
     nativeSiteHeaders.set('Accept', 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8');
     nativeSiteHeaders.set('Accept-Language', 'en-US,en;q=0.9');
 
-    return fetch(defaultSiteUrl, { 
-      method: request.method, 
-      headers: nativeSiteHeaders,
-      body: hasActiveBody ? request.body : null,
-      redirect: 'follow', 
-      cf: {
-        // ✅ FIXED: Points to a registered zone hostname instead of a raw IP string
-        resolveOverride: 'backend-direct-target.microbim.name.ng'
-      }
-    });
-
+    try {
+      return await fetch(defaultSiteUrl, { 
+        method: request.method, 
+        headers: nativeSiteHeaders,
+        body: hasActiveBody ? request.body : null,
+        redirect: 'follow', // Follow deep application routes and internal folder paths automatically
+        cf: {
+          resolveOverride: 'backend-direct-target.microbim.name.ng'
+        }
+      });
+    } catch (err) {
+      return new Response("Origin Routing Failure on Sub-Path", { status: 524 });
+    }
   }
 };
