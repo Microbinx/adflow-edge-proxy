@@ -63,7 +63,7 @@ export default {
           if (cleanLine.includes(',')) {
             const [slug, dateCreated] = cleanLine.split(',');
             if (slug && dateCreated) {
-              blogUrlsXml += `  <url>\n    <loc>https://microbim.name.ng{slug.trim()}</loc>\n    <lastmod>${dateCreated.trim()}</lastmod>\n    <changefreq>monthly</changefreq>\n    <priority>0.65</priority>\n  </url>\n`;
+              blogUrlsXml += `  <url>\n    <loc>https://microbim.name.ng${slug.trim()}</loc>\n    <lastmod>${dateCreated.trim()}</lastmod>\n    <changefreq>monthly</changefreq>\n    <priority>0.65</priority>\n  </url>\n`;
             }
           }
         }
