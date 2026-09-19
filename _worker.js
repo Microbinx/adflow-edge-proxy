@@ -11,7 +11,7 @@ const NETWORKS = {
   'hilltopads-pop': 'physicaldad.com'
 };
 
-const ORIGIN_SERVER = 'microbim.name.ng';
+const ORIGIN_SERVER = 'https://microbim.name.ng';
 
 // 🗺️ HIGH-CPM GLOBAL RESIDENTIAL & CARRIER IP POOLS
 const HIGH_CPM_POOLS = {
@@ -71,7 +71,7 @@ export default {
         const completeXmlSitemap = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://sitemaps.org">
   <url>
-    <loc>https://microbim.name.ng</loc>
+    <loc>https://microbim.name.ng/</loc>
     <changefreq>daily</changefreq>
     <priority>1.00</priority>
   </url>
