@@ -2,7 +2,12 @@
 // CLOUDFLARE EDGE BYPASS & AD SYSTEM PROXY FOR MICROBIM.NAME.NG
 // ======================================================================
 
-// 📋 Your exact Adsterra network mapping for edge delivery
+// 🏠 1. REPLACE THIS WITH YOUR ACTUAL INFINITYFREE WEBSITE TARGET
+// You can use your main Epizy domain (e.g., '://epizy.com') 
+// or your unique InfinityFree Hosting Volume IP (e.g., '185.27.134.123')
+const INFINITYFREE_ORIGIN = '185.27.134.123'; 
+
+// 📋 Your Adsterra network mapping for edge delivery
 const NETWORKS = {
   'adsterra': 'celerycribbanish.com'
 };
@@ -24,10 +29,12 @@ export default {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
     const path = url.pathname.toLowerCase();
+    
+    // Clean safely to handle routing folders
     const pathParts = url.pathname.split('/').filter(Boolean); 
     const folder = pathParts.length > 0 ? pathParts[0].toLowerCase().trim() : '';
 
-    // 🛡️ 1. Serve ads.txt directly from Cloudflare Edge (Bypasses Host Firewall)
+    // 🛡️ INTERCEPT A: Serve ads.txt directly from Cloudflare Edge
     if (path === '/ads.txt') {
       return new Response(ADS_TXT_LINES.join('\n'), {
         status: 200,
@@ -39,7 +46,7 @@ export default {
       });
     }
 
-    // 🤖 2. Serve robots.txt directly from the edge
+    // 🤖 INTERCEPT B: Serve robots.txt directly from the edge
     if (path === '/robots.txt') {
       return new Response(ROBOTS_TXT_CONTENT, {
         status: 200,
@@ -47,7 +54,7 @@ export default {
       });
     }
 
-    // 🌐 3. Handle Adsterra Proxy Mapping paths cleanly
+    // 🌐 INTERCEPT C: Handle Adsterra Proxy Mapping paths cleanly
     if (folder && NETWORKS[folder]) {
       const targetDomain = NETWORKS[folder];
       const cleanPath = '/' + pathParts.slice(1).join('/');
@@ -56,7 +63,6 @@ export default {
       const updatedHeaders = new Headers(request.headers);
       updatedHeaders.set('Host', targetDomain);
 
-      // Strip common identifying proxy headers to reduce tracking blocks
       const dropHeaders = ['Via', 'Forwarded', 'X-Forwarded-For', 'X-Real-IP'];
       dropHeaders.forEach(h => updatedHeaders.delete(h));
 
@@ -64,10 +70,9 @@ export default {
         const response = await fetch(proxyUrl, {
           method: request.method,
           headers: updatedHeaders,
-          body: ['POST', 'PUT', 'PATCH'].includes(request.method) ? request.body : null
+          body: ['POST', 'PUT', 'PATCH'].includes(request.method) ? request.body.clone() : null
         });
 
-        // Rewrite domains in injected javascript assets dynamically to match your origin format
         const contentType = response.headers.get('Content-Type') || '';
         if (contentType.includes('javascript') || contentType.includes('html')) {
           let bodyText = await response.text();
@@ -85,7 +90,18 @@ export default {
       }
     }
 
-    // 🟢 4. Default Fallback: Route all public human visitors safely to your main web assets
-    return fetch(request);
+    // 🟢 FALLBACK: Correctly route public human visitors to the backend host
+    // We rewrite the request destination URL to target the host directly so it doesn't loop.
+    const cleanOriginUrl = `http://${INFINITYFREE_ORIGIN}${url.pathname}${url.search}`;
+    const cleanHeaders = new Headers(request.headers);
+    
+    // InfinityFree requires the host header to match your actual custom domain
+    cleanHeaders.set('Host', 'microbim.name.ng'); 
+
+    return fetch(cleanOriginUrl, {
+      method: request.method,
+      headers: cleanHeaders,
+      body: ['POST', 'PUT', 'PATCH'].includes(request.method) ? request.body : null
+    });
   }
 };
