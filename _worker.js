@@ -2,10 +2,8 @@
 // CLOUDFLARE EDGE BYPASS & AD SYSTEM PROXY FOR MICROBIM.NAME.NG
 // ======================================================================
 
-// 🏠 1. REPLACE THIS WITH YOUR ACTUAL INFINITYFREE WEBSITE TARGET
-// You can use your main Epizy domain (e.g., '://epizy.com') 
-// or your unique InfinityFree Hosting Volume IP (e.g., '185.27.134.123')
-const INFINITYFREE_ORIGIN = '185.27.134.123'; 
+// 🏠 1. Your unique InfinityFree hosting system target identifier
+const INFINITYFREE_ORIGIN = 'if0_://epizy.com'; 
 
 // 📋 Your Adsterra network mapping for edge delivery
 const NETWORKS = {
@@ -30,7 +28,6 @@ export default {
     const url = new URL(request.url);
     const path = url.pathname.toLowerCase();
     
-    // Clean safely to handle routing folders
     const pathParts = url.pathname.split('/').filter(Boolean); 
     const folder = pathParts.length > 0 ? pathParts[0].toLowerCase().trim() : '';
 
@@ -90,12 +87,11 @@ export default {
       }
     }
 
-    // 🟢 FALLBACK: Correctly route public human visitors to the backend host
-    // We rewrite the request destination URL to target the host directly so it doesn't loop.
+    // 🟢 FALLBACK: Correctly route public human visitors to the backend host domain
     const cleanOriginUrl = `http://${INFINITYFREE_ORIGIN}${url.pathname}${url.search}`;
     const cleanHeaders = new Headers(request.headers);
     
-    // InfinityFree requires the host header to match your actual custom domain
+    // InfinityFree requires the host header to match your custom domain to route properly
     cleanHeaders.set('Host', 'microbim.name.ng'); 
 
     return fetch(cleanOriginUrl, {
