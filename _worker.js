@@ -1,11 +1,24 @@
 // ======================================================================
-// MULTI-ROUTE INTERCEPT ENGINE (WITH EDGE SITEMAP PARSER)
+// MULTI-ROUTE INTERCEPT ENGINE (STABLE EDGE ROUTER)
 // DOMAIN: microbim.name.ng
 // ======================================================================
 
-const ADS_TXT_LINES = [
-  "google.com, pub-0000000000000000, DIRECT, f08c47fec0942fa0"
-];
+// 🟢 ADD YOUR ACTUAL ZONE / PUBLISHER IDs IN THIS CONTENT BLOCK:
+const ADS_TXT_CONTENT = `# Adsterra
+adsterra.com, YOUR_ADSTERRA_PUB_ID, DIRECT, f08c47fec0942fa0
+
+# Adcash
+adcash.com, YOUR_ADCASH_PUB_ID, DIRECT, 4f2c00d43a539e1a
+
+# HilltopAds
+hilltopads.com, YOUR_HILLTOPADS_PUB_ID, DIRECT, a1b2c3d4e5f6a7b8
+
+
+# Cybertron
+cybertron.com, 29, DIRECT, 2892,
+
+# Cybertron
+cybertron.com, 31, DIRECT, 2893`;
 
 const ROBOTS_TXT_CONTENT = `User-agent: *
 Allow: /
@@ -25,9 +38,13 @@ export default {
 
     // 🛡️ 1. Serve ads.txt directly from Cloudflare Edge
     if (path === '/ads.txt') {
-      return new Response(ADS_TXT_LINES.join('\n'), {
+      return new Response(ADS_TXT_CONTENT, {
         status: 200,
-        headers: { "Content-Type": "text/plain; charset=utf-8", "Access-Control-Allow-Origin": "*" }
+        headers: { 
+          "Content-Type": "text/plain; charset=utf-8", 
+          "Access-Control-Allow-Origin": "*",
+          "Cache-Control": "public, max-age=3600"
+        }
       });
     }
 
@@ -35,36 +52,25 @@ export default {
     if (path === '/robots.txt') {
       return new Response(ROBOTS_TXT_CONTENT, {
         status: 200,
-        headers: { "Content-Type": "text/plain; charset=utf-8" }
+        headers: { 
+          "Content-Type": "text/plain; charset=utf-8",
+          "Cache-Control": "public, max-age=86400"
+        }
       });
     }
 
-    // 🗺️ 3. EDGE XML SITEMAP COMPILER (Bypasses firewall using sitemap-data.php)
-
+    // 🗺️ 3. EDGE XML SITEMAP COMPILER (Valid Schema Standard)
     if (path === '/sitemap.xml') {
-      try {
-        // Fetch raw data safely via HTTP request to your host file
-        const dataResponse = await fetch(`http://185.27.134.221`, {
-          headers: { 'Host': 'microbim.name.ng' }
-        });
-        const rawText = await dataResponse.text();
-        
-        let blogUrlsXml = '';
-        const lines = rawText.split(/\r?\n/);
-        
-        for (let line of lines) {
-          const cleanLine = line.trim();
-          if (cleanLine.includes(',')) {
-            const [slug, dateCreated] = cleanLine.split(',');
-            if (slug && dateCreated) {
-              blogUrlsXml += `  <url>\n    <loc>https://microbim.name.ng{encodeURIComponent(slug.trim())}</loc>\n    <lastmod>${dateCreated.trim()}</lastmod>\n    <changefreq>monthly</changefreq>\n    <priority>0.65</priority>\n  </url>\n`;
-            }
-          }
-        }
+      // 📝 OPTIONAL: If you have dynamic blog URL categories or posts, 
+      // you can hardcode them here to make sure bots read them safely.
+      const blogUrlsXml = `
+  <url><loc>https://microbim.name.ng</loc><changefreq>monthly</changefreq><priority>0.65</priority></url>
+  <url><loc>https://microbim.name.ng</loc><changefreq>monthly</changefreq><priority>0.65</priority></url>
+      `;
 
-        const completeXmlSitemap = `<?xml version="1.0" encoding="UTF-8"?>
+      const completeXmlSitemap = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://sitemaps.org">
-  <url><loc>https://microbim.name.ng/</loc><changefreq>daily</changefreq><priority>1.00</priority></url>
+  <url><loc>https://microbim.name.ng</loc><changefreq>daily</changefreq><priority>1.00</priority></url>
   <url><loc>https://microbim.name.ng/about</loc><changefreq>monthly</changefreq><priority>0.80</priority></url>
   <url><loc>https://microbim.name.ng/contact</loc><changefreq>monthly</changefreq><priority>0.80</priority></url>
   <url><loc>https://microbim.name.ng/blog</loc><changefreq>weekly</changefreq><priority>0.80</priority></url>
@@ -77,15 +83,16 @@ export default {
   <url><loc>https://microbim.name.ng/privacy</loc><changefreq>yearly</changefreq><priority>0.50</priority></url>
 ${blogUrlsXml}</urlset>`;
 
-        return new Response(completeXmlSitemap.trim(), {
-          status: 200,
-          headers: { "Content-Type": "application/xml; charset=utf-8" }
-        });
-      } catch (err) {
-        return new Response('Sitemap compilation error.', { status: 500 });
-      }
+      return new Response(completeXmlSitemap.trim(), {
+        status: 200,
+        headers: { 
+          "Content-Type": "application/xml; charset=utf-8",
+          "Cache-Control": "public, max-age=86400"
+        }
+      });
     }
 
-    return new Response("Not Found", { status: 404 });
+    // 🔄 4. Pass all regular website traffic directly through to InfinityFree
+    return fetch(request);
   }
 };
