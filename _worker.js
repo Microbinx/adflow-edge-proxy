@@ -64,7 +64,7 @@ export default {
       // 📝 OPTIONAL: If you have dynamic blog URL categories or posts, 
       // you can hardcode them here to make sure bots read them safely.
       const blogUrlsXml = `
-  <url><loc>https://microbim.name.ng</loc><changefreq>monthly</changefreq><priority>0.65</priority></url>
+  <url><loc>https://microbim.name.ng/blog.php</loc><changefreq>monthly</changefreq><priority>0.65</priority></url>
   <url><loc>https://microbim.name.ng</loc><changefreq>monthly</changefreq><priority>0.65</priority></url>
       `;
 
