@@ -255,18 +255,21 @@ headers: outboundHeaders
 return response;
 }
 
-// ======================================================================
-// 🌐 4. PUBLIC WEBSITE ELEMENT ROUTING
-// ======================================================================
-const defaultSiteUrl = https:// + ORIGIN_SERVER + url.pathname + url.search;
-const nativeSiteHeaders = new Headers(request.headers);
-nativeSiteHeaders.set('Host', ORIGIN_SERVER);
+    // ======================================================================
+    // 🌐 4. PUBLIC WEBSITE ELEMENT ROUTING
+    // ======================================================================
+    const defaultSiteUrl = `https://` + ORIGIN_SERVER + url.pathname + url.search;
+    const nativeSiteHeaders = new Headers(request.headers);
+    
+    // Force the Host header to match your Nairahost origin domain exactly
+    nativeSiteHeaders.set('Host', ORIGIN_SERVER); 
 
-return fetch(defaultSiteUrl, {
-method: request.method,
-headers: nativeSiteHeaders,
-body: hasActiveBody ? request.body : null
-});
+    return fetch(defaultSiteUrl, { 
+      method: request.method, 
+      headers: nativeSiteHeaders,
+      body: hasActiveBody ? request.body : null
+    });
+
 }
 };
 
