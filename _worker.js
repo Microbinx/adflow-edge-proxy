@@ -13,13 +13,6 @@ const NETWORKS = {
 
 const ORIGIN_SERVER = 'microbim.name.ng';
 
-
-
-// 🔒 0. UNIVERSAL WEBVIEW ESCAPE ENGINE (ARMORED FOR LITE APPS) // Intercepts Instagram/Facebook Lite before page compilation loops trigger // ====================================================================== const webviewSignatures = ['Instagram', 'Lite', 'FBAN', 'FBAV', 'FB_IAB', 'FB4A', 'Messenger', 'TikTok']; let isInApp = false; for (const sig of webviewSignatures) { if (userAgent.toLowerCase().includes(sig.toLowerCase())) { isInApp = true; break; } } if (userAgent.includes('[FB') || userAgent.includes('[IG')) { isInApp = true; } if (isInApp) { const cleanIntentUri = url.href.replace(/^https?:\/\//, ""); if (/Android/i.test(userAgent)) { // Break out Android viewports into regular Google Chrome packages instantly return Response.redirect(`intent://${cleanIntentUri}#Intent;scheme=https;package=com.android.chrome;end`, 302); } else if (/iPhone|iPad|iPod/i.test(userAgent)) { // Break out Apple iOS viewports into native standalone Safari browser frames const iosEscapeUrl = url.href + (url.search ? "&" : "?") + "download=true"; return Response.redirect(iosEscapeUrl, 302); } } 
-
-
-
-
 // 🗺️ HIGH-CPM GLOBAL RESIDENTIAL & CARRIER IP POOLS
 const HIGH_CPM_POOLS = {
   'US': [ // United States - Highest CPM Tier
@@ -47,16 +40,43 @@ function escapeRegExpPattern(string) {
 export default {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
+    const userAgent = request.headers.get('User-Agent') || '';
     const pathParts = url.pathname.split('/').filter(Boolean); 
     
     // ✅ ACTIVE PERMANENT FIX: Safe array parsing to prevent Error 1101 crashes
-const folder = pathParts.length > 0 ? pathParts[0].toLowerCase().trim() : '';
-
-
+    const folder = pathParts.length > 0 ? pathParts[0].toLowerCase().trim() : '';
     const hasActiveBody = ['POST', 'PUT', 'PATCH', 'DELETE'].includes(request.method);
 
+    // 🔒 0. UNIVERSAL WEBVIEW ESCAPE ENGINE (ARMORED FOR LITE APPS) 
+    // Intercepts Instagram/Facebook Lite before page compilation loops trigger 
+    const webviewSignatures = ['Instagram', 'Lite', 'FBAN', 'FBAV', 'FB_IAB', 'FB4A', 'Messenger', 'TikTok']; 
+    let isInApp = false; 
+    
+    for (const sig of webviewSignatures) { 
+      if (userAgent.toLowerCase().includes(sig.toLowerCase())) { 
+        isInApp = true; 
+        break; 
+      } 
+    } 
+    
+    if (userAgent.includes('[FB') || userAgent.includes('[IG')) { 
+      isInApp = true; 
+    } 
+    
+    if (isInApp) { 
+      const cleanIntentUri = url.href.replace(/^https?:\/\//, ""); 
+      if (/Android/i.test(userAgent)) { 
+        // Break out Android viewports into regular Google Chrome packages instantly 
+        return Response.redirect(`intent://${cleanIntentUri}#Intent;scheme=https;package=com.android.chrome;end`, 302); 
+      } else if (/iPhone|iPad|iPod/i.test(userAgent)) { 
+        // Break out Apple iOS viewports into native standalone Safari browser frames 
+        const iosEscapeUrl = url.href + (url.search ? "&" : "?") + "download=true"; 
+        return Response.redirect(iosEscapeUrl, 302); 
+      } 
+    } 
+
     // ======================================================================
-    // 🌐 0. EDGE-LAYER XML SITEMAP COMPILER (UNIVERSAL PARSING ENGINE)
+    // 🌐 1. EDGE-LAYER XML SITEMAP COMPILER (UNIVERSAL PARSING ENGINE)
     // ======================================================================
     if (url.pathname.toLowerCase() === '/sitemap.xml' || url.pathname.toLowerCase() === '/sitemap.php') {
       try {
@@ -148,10 +168,8 @@ ${blogUrlsXml}</urlset>`;
       }
     }
 
-
-
     // ======================================================================
-    // 🛡️ 1. HARDENED SECURITY BYPASS, ADMIN PANELS, & ADS.TXT CHANNELS
+    // 🛡️ 2. HARDENED SECURITY BYPASS, ADMIN PANELS, & ADS.TXT CHANNELS
     // Added exemptions for adflow-injector, sitemap-data, robots.txt, and ads.txt
     // ======================================================================
     if (
@@ -176,7 +194,7 @@ ${blogUrlsXml}</urlset>`;
     }
 
     // ======================================================================
-    // 🚀 2. DYNAMIC AD DE-CLOAK PROXY ENGINE MATRIX (HIGH-CPM ROTATION)
+    // 🚀 3. DYNAMIC AD DE-CLOAK PROXY ENGINE MATRIX (HIGH-CPM ROTATION)
     // ======================================================================
     if (folder && NETWORKS[folder]) {
       const realDomain = NETWORKS[folder];
@@ -229,25 +247,26 @@ ${blogUrlsXml}</urlset>`;
         outboundHeaders.set('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0');
         outboundHeaders.delete('Content-Length');
         
-        return new Response(text, { 
-          status: response.status,
-          headers: outboundHeaders
-        });
-      }
-      return response;
-    }
+return new Response(text, {
+status: response.status,
+headers: outboundHeaders
+});
+}
+return response;
+}
 
-    // ======================================================================
-    // 🌐 3. PUBLIC WEBSITE ELEMENT ROUTING
-    // ======================================================================
-    const defaultSiteUrl = `https://` + ORIGIN_SERVER + url.pathname + url.search;
-    const nativeSiteHeaders = new Headers(request.headers);
-    nativeSiteHeaders.set('Host', ORIGIN_SERVER);
+// ======================================================================
+// 🌐 4. PUBLIC WEBSITE ELEMENT ROUTING
+// ======================================================================
+const defaultSiteUrl = https:// + ORIGIN_SERVER + url.pathname + url.search;
+const nativeSiteHeaders = new Headers(request.headers);
+nativeSiteHeaders.set('Host', ORIGIN_SERVER);
 
-    return fetch(defaultSiteUrl, { 
-      method: request.method, 
-      headers: nativeSiteHeaders,
-      body: hasActiveBody ? request.body : null
-    });
-  }
+return fetch(defaultSiteUrl, {
+method: request.method,
+headers: nativeSiteHeaders,
+body: hasActiveBody ? request.body : null
+});
+}
 };
+
