@@ -251,4 +251,3 @@ ${blogUrlsXml}</urlset>`;
     });
   }
 };
-
